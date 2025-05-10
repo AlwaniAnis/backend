@@ -4,17 +4,22 @@ import { Repository } from 'typeorm';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { Requests } from './entities/request.entity';
+import { NotificationsGateway } from '@/notifications/notifications.gateway';
 
 @Injectable()
 export class RequestsService {
   constructor(
     @InjectRepository(Requests)
     private readonly requestsRepository: Repository<Requests>,
+    private readonly gateway: NotificationsGateway,
   ) {}
 
   async create(createRequestDto: CreateRequestDto, userId: number): Promise<Requests> {
     const requests = this.requestsRepository.create({ ...createRequestDto, userId });
-    return await this.requestsRepository.save(requests);
+    const res = await this.requestsRepository.save(requests);
+
+    this.gateway.sendToAdmins('📥 A new request has been submitted.');
+    return res;
   }
 
   async findAll(
@@ -86,11 +91,25 @@ export class RequestsService {
 
   async reject(id: number, note: string): Promise<Requests | null> {
     await this.requestsRepository.update(id, { status: 'rejected', note });
-    return await this.requestsRepository.findOne({ where: { id } });
+    const request = await this.requestsRepository.findOne({ where: { id } });
+    if (request) {
+      this.gateway.sendToUser(
+        request.userId.toString(),
+        `Your request ${request.title} has been rejected. Note: ${note}`,
+      );
+    }
+    return request;
   }
 
   async validate(id: number, note: string): Promise<Requests | null> {
     await this.requestsRepository.update(id, { status: 'validated', note });
-    return await this.requestsRepository.findOne({ where: { id } });
+    const request = await this.requestsRepository.findOne({ where: { id } });
+    if (request) {
+      this.gateway.sendToUser(
+        request.userId.toString(),
+        `Your request ${request.title} has been validated. Note: ${note}`,
+      );
+    }
+    return request;
   }
 }

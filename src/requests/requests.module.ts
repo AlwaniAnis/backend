@@ -4,9 +4,10 @@ import { RequestsController } from './requests.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Requests } from './entities/request.entity';
 import { Repository } from 'typeorm';
+import { NotificationsModule } from '@/notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Requests])],
+  imports: [TypeOrmModule.forFeature([Requests]), NotificationsModule],
   controllers: [RequestsController],
   providers: [RequestsService, Repository<Requests>],
 })
