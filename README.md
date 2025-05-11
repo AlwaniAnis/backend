@@ -84,6 +84,11 @@ Use the `@Roles()` decorator and the `RolesGuard` from `common/`:
 - Protected endpoints use `JwtAuthGuard`
 
 ---
+## API Documentation
+
+The API documentation for this project can be accessed via Swagger at the `/doc` route. Here is a preview:
+
+![Swagger UI](./images/swagger.png)
 
 ## 🔔 Real-Time Notifications
 
