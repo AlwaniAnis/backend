@@ -1,98 +1,145 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# Enterprise Help Desk Solution – Backend
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This is the **backend API** for the **Enterprise Help Desk Solution**, built using **NestJS**, **TypeORM**, and **PostgreSQL**.  
+It supports authentication, real-time WebSocket notifications, and flexible role-based access control.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Features
 
-## Project setup
+- 🔐 JWT Authentication with multi-role support
+- 🧑‍🤝‍🧑 Role-based Access Control (RBAC)
+- ⚔️ AuthGuard & RoleGuard using NestJS decorators
+- 🔔 WebSocket notifications with NestJS Gateway
+- 🗃 PostgreSQL integration via TypeORM
+- 📦 Modular architecture with common utilities
 
-```bash
-$ yarn install
+---
+
+## 🧱 Project Structure
+
+```
+src/
+├── auth/                # Authentication logic (JWT, login)
+│   ├── auth.module.ts
+│   ├── auth.service.ts
+│   └── jwt.strategy.ts
+    └─  jwt-payload.interface
+    └─  auth.controller.ts // that contains register , login endpoints
+├── common/              # Shared decorators and guards
+│   ├── roles.decorator.ts
+│   └── roles.guard.ts
+├── notifications/       # WebSocket real-time updates
+│   ├── notifications.gateway.ts
+│   └── notifications.module.ts
+├── requests/            # Help desk request/ticket logic
+│   ├── requests.module.ts
+│   ├── requests.controller.ts
+│   └── requests.service.ts
+├── users/               # User management with roles
+│   ├── user.entity.ts
+│   ├── users.module.ts
+│   └── users.service.ts
+
+├── main.ts              # App bootstrap
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ yarn run start
+## 🧑‍🏫 Role-Based Access Control (RBAC)
 
-# watch mode
-$ yarn run start:dev
+Each user can have **multiple roles**, represented as an array in the user entity:
 
-# production mode
-$ yarn run start:prod
+```ts
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+//  other fields
+  @Column("text", { array: true, default: ['user'] })
+  roles: string[];
+}
 ```
 
-## Run tests
 
-```bash
-# unit tests
-$ yarn run test
 
-# e2e tests
-$ yarn run test:e2e
+### Use roles in route guards
 
-# test coverage
-$ yarn run test:cov
+Use the `@Roles()` decorator and the `RolesGuard` from `common/`:
+
+```ts
+@ApiTags('requests') // Group the endpoints under the "requests" tag in Swagger
+@ApiBearerAuth() // Indicate that these endpoints require a Bearer token
+@Controller('requests')
+@UseGuards(AuthGuard('jwt'))  // defined in the  jwt.strategy 
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 🔐 Authentication
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- JWT-based login
+- `JwtStrategy` configured via Passport
+- Protected endpoints use `JwtAuthGuard`
 
-```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+---
+## API Documentation
+
+The API documentation for this project can be accessed via Swagger at the `/doc` route. Here is a preview:
+
+![Swagger UI](./images/swagger.png)
+
+## 🔔 Real-Time Notifications
+
+WebSocket events are broadcasted using `Socket.IO` via NestJS Gateway:
+
+
+---
+
+## ⚙️ Environment Variables
+
+Example `.env`:
+
+```env
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=yourpassword
+DATABASE_NAME=helpdesk
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=3600s
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 🛠 Getting Started
 
-Check out a few resources that may come in handy when working with NestJS:
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+2. **Run database migrations (if any)**
 
-## Support
+3. **Start dev server**
+   ```bash
+   npm run start:dev
+   ```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+4. **API runs at** `http://localhost:5000`
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 🧪 Dependencies
 
-## License
+- `@nestjs/core`, `@nestjs/common`
+- `@nestjs/typeorm`, `jest`
+- `@nestjs/jwt`, `passport-jwt`
+- `@nestjs/websockets`, `socket.io`
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+## Testing : using Jest
+## 📄 License
+
+MIT
